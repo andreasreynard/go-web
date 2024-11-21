@@ -5,42 +5,45 @@ import (
 	"gorm.io/gorm"
 )
 
-type Product struct {
-	ID    uint
-	Code  string
-	Price uint
+type Album struct {
+	gorm.Model
+	Title  string
+	Artist string
+	Price  float32
 }
 
 func main() {
 	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:250204@tcp(127.0.0.1:3306)/recordings?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Product{})
+	db.AutoMigrate(&Album{})
 
 	// Create
-	prod := db.Create(&Product{Code: "D42", Price: 100})
-	result := db.Create(&prod) // pass pointer of data to Create
+	result := db.Create(&Album{Title: "Semester 5 Bikin Mati Rasa", Artist: "Andrey Sam", Price: 99.99})
+	if result.Error != nil {
+		panic(result.Error) // Handle error
+	}
 
-	prod.Code           // returns inserted data's primary key
-	result.Error        // returns error
-	result.RowsAffected // returns inserted records count
+	// Check inserted data
+	rowsAffected := result.RowsAffected // returns inserted records count
+	println("Rows affected:", rowsAffected)
 
 	// Read
-	var product Product
-	db.First(&product, 1)                 // find product with integer primary key
-	db.First(&product, "code = ?", "D42") // find product with code D42
+	var album Album
+	// db.First(&album, 1)                                         // find album with integer primary key
+	db.First(&album, "title = ?", "Semester 5 Bikin Mati Rasa") // find album with title Semester 5 Bikin Mati Rasa
 
-	// Update - update product's price to 200
-	db.Model(&product).Update("Price", 200)
+	// Update - update product's price to 199.99
+	db.Model(&album).Update("Price", 199.99)
 	// Update - update multiple fields
-	db.Model(&product).Updates(Product{Price: 200, Code: "F42"}) // non-zero fields
-	db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
+	db.Model(&album).Updates(Album{Price: 199.99, Title: "Semester 5 ITS Bikin Mati Rasa"}) // non-zero fields
+	db.Model(&album).Updates(map[string]interface{}{"Price": 199.99, "Title": "Semester 5 ITS Bikin Mati Rasa"})
 
 	// Delete - delete product
-	db.Delete(&product, 1)
+	db.Delete(&album, 1)
 }
